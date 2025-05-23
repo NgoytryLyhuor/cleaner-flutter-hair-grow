@@ -51,7 +51,8 @@ class MyApp extends StatelessWidget {
       title: 'growTokyo',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/first-load',
+      // initialRoute: '/first-load',
+      initialRoute: '/home',
       onGenerateRoute: (settings) {
         // Get the route name
         final routeName = settings.name;
@@ -146,7 +147,7 @@ class MyApp extends StatelessWidget {
               child: child,
             );
           },
-          transitionDuration: const Duration(milliseconds: 50), // Fast fade
+          transitionDuration: const Duration(milliseconds: 1), // Fast fade
         );
       },
       // Routes property removed as we're using onGenerateRoute

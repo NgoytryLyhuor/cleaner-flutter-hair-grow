@@ -10,9 +10,7 @@ class ServiceScreen extends StatefulWidget {
 }
 
 class _ServiceScreenState extends State<ServiceScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+    with TickerProviderStateMixin {
 
   final List<ServiceCategory> _serviceCategories = [
     ServiceCategory(
@@ -20,62 +18,105 @@ class _ServiceScreenState extends State<ServiceScreen>
       subServices: [
         SubService(
           title: 'Cut (For Men)',
-          description: 'Professional haircut for men',
-          imagePath: 'assets/images/men_haircut.jpg',
-          prices: [
-            // Removed the specific price as requested
-          ],
+          description: 'Professional haircut for men with styling',
+          imagePath: 'assets/services/cut-man.jpg',
         ),
         SubService(
           title: 'Cut (For Lady)',
-          description: 'Elegant haircut for women',
-          imagePath: 'assets/images/lady_haircut.jpg',
-          prices: [
-            'Cambodian Hairstylist \$18',
-          ],
+          description: 'Elegant haircut for women with precision styling',
+          imagePath: 'assets/services/cut-women.jpg',
         ),
         SubService(
           title: 'Cut (For Kids under 10 years)',
-          description: 'Fun and safe haircuts for kids',
-          imagePath: 'assets/images/kids_haircut.jpg',
-          prices: [
-            'Cambodian Hairstylist \$11',
-          ],
+          description: 'Fun and safe haircuts for kids with patient care',
+          imagePath: 'assets/services/cut-kid.jpg',
+        ),
+        SubService(
+          title: 'Beard Trim & Shape',
+          description: 'Professional beard trimming and shaping service',
+          imagePath: 'assets/services/bleach.jpg',
         ),
       ],
     ),
     ServiceCategory(
       title: 'SHAMPOO and BLOW DRY',
-      subServices: [],
+      subServices: [
+        SubService(
+          title: 'Deep Cleansing Shampoo',
+          description: 'Thorough hair cleansing with premium products',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Moisturizing Treatment',
+          description: 'Hydrating shampoo treatment for dry hair',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Volume Boost Blow Dry',
+          description: 'Professional blow dry for maximum volume',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+      ],
     ),
     ServiceCategory(
       title: 'COLOR',
-      subServices: [],
+      subServices: [
+        SubService(
+          title: 'Full Hair Coloring',
+          description: 'Complete hair color transformation',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Highlights & Lowlights',
+          description: 'Strategic highlighting for natural dimension',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Root Touch-up',
+          description: 'Quick root color maintenance service',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Balayage Technique',
+          description: 'Hand-painted highlights for natural look',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Color Correction',
+          description: 'Professional color correction and repair',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+      ],
+    ),
+    ServiceCategory(
+      title: 'STYLING & TREATMENTS',
+      subServices: [
+        SubService(
+          title: 'Hair Straightening',
+          description: 'Professional keratin straightening treatment',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Perm & Curling',
+          description: 'Create beautiful curls and waves',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+        SubService(
+          title: 'Hair Mask Treatment',
+          description: 'Deep conditioning mask for healthy hair',
+          imagePath: 'assets/services/shampoo.jpg',
+        ),
+      ],
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    // Start the animation when the page loads
-    _animationController.forward();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -106,90 +147,82 @@ class _ServiceScreenState extends State<ServiceScreen>
 
   @override
   Widget build(BuildContext context) {
-    final String staffName = ModalRoute.of(context)?.settings.arguments as String? ?? 'Mochi';
-
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Stack(
-          children: [
-            // Scrollable Content Area (now full screen)
-            Positioned.fill(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    // Top padding to account for header height
-                    const SizedBox(height: 140), // Adjust this value based on your header height
+      body: Stack(
+        children: [
+          // Scrollable Content Area (now full screen)
+          Positioned.fill(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // Top padding to account for header height
+                  const SizedBox(height: 140), // Adjust this value based on your header height
 
-                    // Title with fade animation
-                    Container(
-                      margin: const EdgeInsets.only(top: 25),
-                      padding: const EdgeInsets.all(20),
-                      child: Text(
-                        "$staffName's Services",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+                  // Title with fade animation
+                  Container(
+                    margin: const EdgeInsets.only(top: 25),
+                    padding: const EdgeInsets.all(20),
+                    child: const Text(
+                      "Mochi's Services",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black87,
                       ),
                     ),
+                  ),
 
-                    // Services List
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: _serviceCategories.map((category) {
-                          return _buildServiceCard(category);
-                        }).toList(),
-                      ),
+                  // Services List
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: _serviceCategories.map((category) {
+                        return _buildServiceCard(category);
+                      }).toList(),
                     ),
+                  ),
 
-                    // Bottom padding for scroll area
-                    const SizedBox(height: 100),
-                  ],
-                ),
+                  // Bottom padding for scroll area
+                  const SizedBox(height: 100),
+                ],
               ),
             ),
+          ),
 
-            // Progress Header (now overlays the content)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ProgressHeader(
-                title: 'grow Tokyo BKK',
-                currentStep: 2,
-                totalSteps: 3,
-                stepLabels: ['Staff', 'Services', 'Date & Time'],
-                onBackPressed: () => Navigator.of(context).pop(),
-              ),
+          // Progress Header (now overlays the content)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ProgressHeader(
+              title: 'grow Tokyo BKK',
+              currentStep: 2,
+              totalSteps: 3,
+              stepLabels: ['Staff', 'Services', 'Date & Time'],
+              onBackPressed: () => Navigator.of(context).pop(),
             ),
+          ),
 
-            // Footer Button (positioned at bottom)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: Colors.grey[100], // Match scaffold background
-                child: FooterButton(
-                  leftText: _getSelectedServices().isEmpty
-                      ? staffName
-                      : '${_getSelectedServices().length} service(s) selected',
-                  onNextPressed: () {
-                    if (_getSelectedServices().isNotEmpty) {
-                      // Navigation logic with selected services
-                      print('Selected services: ${_getSelectedServices().map((s) => s.title).join(', ')}');
-                    }
-                  },
-                ),
+          // Footer Button (positioned at bottom)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.grey[100], // Match scaffold background
+              child: FooterButton(
+                staffName: 'Mochi',
+                onButtonPressed: () {
+                  // Your button press logic here
+                },
+                buttonText: 'Next',
               ),
+
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -197,6 +230,7 @@ class _ServiceScreenState extends State<ServiceScreen>
   Widget _buildServiceCard(ServiceCategory category) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -210,22 +244,43 @@ class _ServiceScreenState extends State<ServiceScreen>
       ),
       child: Column(
         children: [
-          ListTile(
-            title: Text(
-              category.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _toggleCategoryExpansion(_serviceCategories.indexOf(category)),
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              child: ListTile(
+                title: Text(
+                  category.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                ),
+                trailing: AnimatedRotation(
+                  turns: category.isExpanded ? 0.5 : 0,
+                  duration: category.isExpanded
+                      ? const Duration(milliseconds: 300) // Smooth rotation when opening
+                      : const Duration(milliseconds: 0), // Immediate rotation when closing
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.grey[600],
+                  ),
+                ),
               ),
             ),
-            trailing: Icon(
-              category.isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              color: Colors.grey[600],
-            ),
-            onTap: () => _toggleCategoryExpansion(_serviceCategories.indexOf(category)),
           ),
-          if (category.isExpanded)
-            _buildSubServices(category),
+          AnimatedSize(
+            duration: category.isExpanded
+                ? const Duration(milliseconds: 400) // Smooth expand
+                : const Duration(milliseconds: 0), // Immediate collapse
+            curve: Curves.easeInOut,
+            child: category.isExpanded
+                ? _buildSubServices(category)
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
@@ -237,16 +292,48 @@ class _ServiceScreenState extends State<ServiceScreen>
       child: Column(
         children: [
           if (category.subServices.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'No services available',
-                style: TextStyle(color: Colors.grey),
+            AnimatedOpacity(
+              opacity: category.isExpanded ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.easeInOut,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'No services available',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
             )
           else
-            ...category.subServices.map((subService) {
-              return _buildSubServiceItem(category, subService);
+            ...category.subServices.asMap().entries.map((entry) {
+              int index = entry.key;
+              SubService subService = entry.value;
+
+              // Staggered animation delays only for expanding
+              int expandDelay = index * 100;
+              int collapseDelay = 0; // No delay for collapsing - all close at same time
+
+              return TweenAnimationBuilder<double>(
+                duration: Duration(
+                  milliseconds: category.isExpanded
+                      ? 300 + expandDelay  // Staggered expand with delay
+                      : 0, // Immediate collapse
+                ),
+                tween: Tween<double>(
+                  begin: category.isExpanded ? 0.0 : 1.0,
+                  end: category.isExpanded ? 1.0 : 0.0,
+                ),
+                curve: category.isExpanded ? Curves.easeOut : Curves.linear,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Opacity(
+                      opacity: value,
+                      child: _buildSubServiceItem(category, subService),
+                    ),
+                  );
+                },
+              );
             }),
         ],
       ),
@@ -256,31 +343,29 @@ class _ServiceScreenState extends State<ServiceScreen>
   Widget _buildSubServiceItem(ServiceCategory category, SubService subService) {
     return InkWell(
       onTap: () => _toggleServiceSelection(category, subService),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: Colors.grey[200]!,
-              width: 1.0,
-            ),
-          ),
-        ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Image on the left
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 subService.imagePath,
-                width: 80,
-                height: 80,
+                width: 70,
+                height: 70,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
-                  width: 80,
-                  height: 80,
-                  color: Colors.grey[200],
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Icon(Icons.image, color: Colors.grey[400]),
                 ),
               ),
@@ -290,11 +375,12 @@ class _ServiceScreenState extends State<ServiceScreen>
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     subService.title,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       fontSize: 15,
                     ),
                   ),
@@ -306,37 +392,34 @@ class _ServiceScreenState extends State<ServiceScreen>
                       color: Colors.grey[600],
                     ),
                   ),
-                  if (subService.prices.isNotEmpty)
-                    const SizedBox(height: 8),
-                  ...subService.prices.map((price) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      price,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  )),
                 ],
               ),
             ),
-            // Checkbox on the right
-            Container(
-              width: 24,
-              height: 24,
+            // Square Checkbox on the right with animation
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              width: 20,
+              height: 20,
               margin: const EdgeInsets.only(left: 8),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(4),
                 color: subService.isSelected ? Colors.deepPurple : Colors.transparent,
                 border: Border.all(
                   color: subService.isSelected ? Colors.deepPurple : Colors.grey[400]!,
                   width: 2,
                 ),
               ),
-              child: subService.isSelected
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
-                  : null,
+              child: AnimatedScale(
+                scale: subService.isSelected ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.elasticOut,
+                child: const Icon(
+                  Icons.check,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ],
         ),
@@ -361,14 +444,12 @@ class SubService {
   final String title;
   final String description;
   final String imagePath;
-  final List<String> prices;
   bool isSelected;
 
   SubService({
     required this.title,
     required this.description,
     required this.imagePath,
-    required this.prices,
     this.isSelected = false,
   });
 }

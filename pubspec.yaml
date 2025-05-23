@@ -62,5 +62,6 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/users/
+    - assets/services/
 
 

@@ -130,7 +130,7 @@ class ProgressHeader extends StatelessWidget {
         Text(
           stepLabels[index],
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             color: isCompleted || isCurrent ? Colors.black : Colors.grey.shade500,
             fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
           ),

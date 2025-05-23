@@ -12,7 +12,7 @@ class StaffScreen extends StatefulWidget {
 class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin {
   String? _selectedStaffId;
   late AnimationController _animationController;
-  late AnimationController _staggeredAnimationController; // New controller for staggered animation
+  late AnimationController _staggeredAnimationController;
   late Animation<double> _scaleAnimation;
 
   // Sample staff data with descriptions instead of services
@@ -74,7 +74,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
     // New staggered animation controller for screen entry
     _staggeredAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800), // Total duration for all items
+      duration: const Duration(milliseconds: 800),
     );
 
     // Start the staggered animation when the screen loads
@@ -84,7 +84,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
   @override
   void dispose() {
     _animationController.dispose();
-    _staggeredAnimationController.dispose(); // Dispose the new controller
+    _staggeredAnimationController.dispose();
     super.dispose();
   }
 
@@ -118,7 +118,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
               child: Column(
                 children: [
                   // Top padding to account for header height
-                  const SizedBox(height: 140), // Adjust this value based on your header height
+                  const SizedBox(height: 140),
 
                   // Subtitle with fade animation
                   FadeTransition(
@@ -141,8 +141,8 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
                         child: const Text(
                           'Choose Your Stylist',
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
                             color: Colors.black87,
                           ),
                         ),
@@ -194,37 +194,27 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
                                     child: AnimatedContainer(
                                       duration: const Duration(milliseconds: 150),
                                       curve: Curves.easeInOut,
-                                      padding: const EdgeInsets.all(16),
+                                      padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: isSelected ? Colors.black : Colors.transparent,
-                                          width: 2,
-                                        ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: isSelected
-                                                ? Colors.black.withOpacity(0.15)
-                                                : Colors.black.withOpacity(0.05),
-                                            blurRadius: isSelected ? 12 : 8,
+                                            color: Colors.black.withOpacity(0.05),
+                                            blurRadius: 8,
                                             offset: const Offset(0, 2),
-                                            spreadRadius: isSelected ? 1 : 0,
+                                            spreadRadius: 0,
                                           ),
                                         ],
                                       ),
                                       child: Row(
                                         children: [
                                           // Staff Image
-                                          AnimatedContainer(
-                                            duration: const Duration(milliseconds: 150),
-                                            width: 60,
-                                            height: 60,
+                                          Container(
+                                            width: 70,
+                                            height: 70,
                                             decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: isSelected
-                                                  ? Border.all(color: Colors.black, width: 2)
-                                                  : null,
+                                              borderRadius: BorderRadius.circular(100),
                                               image: DecorationImage(
                                                 image: AssetImage(staff['image']),
                                                 fit: BoxFit.cover,
@@ -256,45 +246,52 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 // Name
-                                                AnimatedDefaultTextStyle(
-                                                  duration: const Duration(milliseconds: 150),
-                                                  style: TextStyle(
+                                                Text(
+                                                  staff['name'],
+                                                  style: const TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
-                                                    color: isSelected ? Colors.black : Colors.black87,
+                                                    color: Colors.black87,
                                                   ),
-                                                  child: Text(staff['name']),
                                                 ),
 
                                                 const SizedBox(height: 4),
 
                                                 // Title
-                                                AnimatedDefaultTextStyle(
-                                                  duration: const Duration(milliseconds: 150),
+                                                Text(
+                                                  staff['title'],
                                                   style: TextStyle(
                                                     fontSize: 14,
-                                                    color: isSelected
-                                                        ? Colors.grey[700]
-                                                        : Colors.grey[600],
+                                                    color: Colors.grey[600],
                                                   ),
-                                                  child: Text(staff['title']),
                                                 ),
 
                                                 const SizedBox(height: 8),
 
                                                 // Description
-                                                AnimatedDefaultTextStyle(
-                                                  duration: const Duration(milliseconds: 150),
+                                                Text(
+                                                  staff['description'],
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: isSelected
-                                                        ? Colors.grey[700]
-                                                        : Colors.grey[600],
+                                                    color: Colors.grey[600],
                                                   ),
-                                                  child: Text(staff['description']),
                                                 ),
                                               ],
                                             ),
+                                          ),
+
+                                          // Radio Button
+                                          Radio<String>(
+                                            value: staff['id'],
+                                            groupValue: _selectedStaffId,
+                                            onChanged: (String? value) {
+                                              if (value != null) {
+                                                _selectStaff(value);
+                                              }
+                                            },
+                                            activeColor: Colors.black,
+                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            visualDensity: VisualDensity.compact,
                                           ),
                                         ],
                                       ),
@@ -327,8 +324,6 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
               totalSteps: 3,
               stepLabels: ['Staff', 'Services', 'Date & Time'],
               onBackPressed: () => Navigator.of(context).pop(),
-              // You'll need to add this parameter to make background transparent
-              // backgroundColor: Colors.transparent, // Add this to ProgressHeader widget
             ),
           ),
 
@@ -338,7 +333,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
             left: 0,
             right: 0,
             child: Container(
-              color: Colors.grey[100], // Match scaffold background
+              color: Colors.grey[100],
               child: NextButton(
                 onPressed: _selectedStaffId != null ? _onNextPressed : null,
                 isEnabled: _selectedStaffId != null,
