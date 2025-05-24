@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 
 class NextButton extends StatefulWidget {
   final VoidCallback? onPressed;
-  final String text;
+  final String text; // Now this can be any text like "Next", "Confirm", "Submit", etc.
   final bool isEnabled;
+  final Color? backgroundColor; // Added customization for background color
+  final Color? textColor; // Added customization for text color
 
   const NextButton({
     Key? key,
     this.onPressed,
-    this.text = 'Next',
+    this.text = 'Next', // Default is still 'Next' but can be overridden
     this.isEnabled = true,
+    this.backgroundColor,
+    this.textColor,
   }) : super(key: key);
 
   @override
@@ -53,7 +57,7 @@ class _NextButtonState extends State<NextButton> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: widget.backgroundColor ?? Colors.black, // Use custom color or default
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(10),
           topRight: Radius.circular(10),
@@ -76,7 +80,7 @@ class _NextButtonState extends State<NextButton> with SingleTickerProviderStateM
               onPressed: _handleTap,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                foregroundColor: widget.textColor ?? Colors.black, // Use custom color or default
                 disabledBackgroundColor: Colors.grey[300],
                 disabledForegroundColor: Colors.grey[600],
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -86,7 +90,7 @@ class _NextButtonState extends State<NextButton> with SingleTickerProviderStateM
                 elevation: 0,
               ),
               child: Text(
-                widget.text,
+                widget.text, // This will display whatever text is passed
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       // initialRoute: '/first-load',
-      initialRoute: '/first-load',
+      initialRoute: '/detail',
       onGenerateRoute: (settings) {
         // Get the route name
         final routeName = settings.name;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/step_header.dart';
+import '../widgets/custom_header.dart';
+import '../widgets/next_button.dart';
 
 class DetailScreen extends StatefulWidget {
   const DetailScreen({Key? key}) : super(key: key);
@@ -9,32 +10,25 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  final _noteController = TextEditingController();
   bool _isLoading = false;
-  
-  // Sample booking details
-  final Map<String, dynamic> _bookingDetails = {
-    'branch': 'Main Branch',
-    'staff': 'John Doe',
-    'services': [
-      {
-        'name': 'Men\'s Haircut',
-        'price': 25.00,
-        'duration': '30 min',
-      },
-      {
-        'name': 'Hair Treatment',
-        'price': 45.00,
-        'duration': '45 min',
-      },
-    ],
-    'date': 'May 25, 2025',
-    'time': '10:00 AM',
+  bool _usePoints = false;
+  final TextEditingController _referralController = TextEditingController();
+
+  // Sample booking information with null safety
+  final Map<String, dynamic> _bookingInfo = {
+    'name': 'My Developer Testing',
+    'contactNumber': '123456789',
+    'dateTime': '2025-05-28 at 10:30',
+    'branchName': 'grow Tokyo BKK',
+    'address': '123 Main Street, Bangkok',
+    'stylist': 'Mochi',
+    'description': 'Cut (For Men)\n- Cambodian Hairstylist \$15\n- Cambodian Top Hairstylist \$18\n- Japanese Hairstylist \$35',
+    'image': 'assets/services/cut-man.jpg',
   };
 
   @override
   void dispose() {
-    _noteController.dispose();
+    _referralController.dispose();
     super.dispose();
   }
 
@@ -44,16 +38,126 @@ class _DetailScreenState extends State<DetailScreen> {
     });
 
     // Simulate API call
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        
-        // Show success dialog
+
+        // Navigate to success screen or show success dialog
         _showSuccessDialog();
       }
     });
+  }
+
+  void _showReferralCodeBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.4,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with close button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Add Referral Code',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.grey,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Input field
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: TextField(
+                  controller: _referralController,
+                  decoration: const InputDecoration(
+                    hintText: 'Referral Code',
+                    hintStyle: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Apply button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Handle apply referral code
+                    Navigator.pop(context);
+                    // You can add your referral code logic here
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Apply',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showSuccessDialog() {
@@ -86,7 +190,7 @@ class _DetailScreenState extends State<DetailScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -106,241 +210,339 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  double get _subtotal {
-    double total = 0;
-    for (var service in _bookingDetails['services']) {
-      total += service['price'];
-    }
-    return total;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            StepHeader(
-              title: 'Booking Details',
-              subtitle: 'Review and confirm your booking',
-              onBackPressed: () => Navigator.of(context).pop(),
+      backgroundColor: Colors.grey[50],
+      body: Column(
+        children: [
+          // Custom Header
+          const CustomHeader(
+            title: 'Confirm Booking',
+          ),
+
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Your Information Section
+                  _buildSectionTitle('Your Information'),
+                  const SizedBox(height: 8),
+                  _buildInfoCard([
+                    _buildInfoRow('Name', _bookingInfo['name'] ?? 'N/A'),
+                    _buildInfoRow('Contact Number', _bookingInfo['contactNumber'] ?? 'N/A'),
+                  ]),
+
+                  const SizedBox(height: 10),
+
+                  // Time Slot Section
+                  _buildSectionTitle('Time Slot'),
+                  const SizedBox(height: 8),
+                  _buildInfoCard([
+                    _buildInfoRow('Date & Time', _bookingInfo['dateTime'] ?? 'N/A'),
+                  ]),
+
+                  const SizedBox(height: 10),
+
+                  // Location Information Section
+                  _buildSectionTitle('Location Information'),
+                  const SizedBox(height: 8),
+                  _buildInfoCard([
+                    _buildInfoRow('Branch Name', _bookingInfo['branchName'] ?? 'N/A'),
+                    _buildInfoRow('Address', _bookingInfo['address'] ?? 'N/A'),
+                  ]),
+
+                  const SizedBox(height: 10),
+
+                  // Stylist Section
+                  _buildSectionTitle('Stylist'),
+                  const SizedBox(height: 8),
+                  _buildInfoCard([
+                    _buildInfoRow('Stylist', _bookingInfo['stylist'] ?? 'N/A'),
+                  ]),
+
+                  const SizedBox(height: 10),
+
+                  // Services Section
+                  _buildSectionTitle('Services'),
+                  const SizedBox(height: 8),
+                  _buildServiceWithImageCard(),
+
+                  const SizedBox(height: 10),
+
+                  // Service Note Section
+                  _buildServiceNoteCard(),
+
+                  const SizedBox(height: 16),
+
+                  // Coupon Section
+                  _buildCouponCard(),
+
+                  const SizedBox(height: 16),
+
+                  // Referral Code Section
+                  _buildReferralCodeCard(),
+
+                  const SizedBox(height: 16),
+
+                  // Points Section
+                  _buildPointsCard(),
+
+                  const SizedBox(height: 100), // Space for bottom button
+                ],
+              ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Branch and staff info
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+          ),
+
+          // Next Button
+          NextButton(
+            onPressed: !_isLoading ? _confirmBooking : null,
+            text: 'Confirm',
+            isEnabled: !_isLoading,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black87,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Column(
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceWithImageCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Service Image
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[200],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  _bookingInfo['image'] ?? 'assets/services/cut-man.jpg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.content_cut,
+                        color: Colors.grey,
+                        size: 30,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Appointment Info',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildInfoRow(
-                              icon: Icons.store_outlined,
-                              label: 'Branch',
-                              value: _bookingDetails['branch'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.person_outline,
-                              label: 'Staff',
-                              value: _bookingDetails['staff'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.calendar_today_outlined,
-                              label: 'Date',
-                              value: _bookingDetails['date'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.access_time,
-                              label: 'Time',
-                              value: _bookingDetails['time'],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Services
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Services',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _bookingDetails['services'].length,
-                              itemBuilder: (context, index) {
-                                final service = _bookingDetails['services'][index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            service['name'],
-                                            style: Theme.of(context).textTheme.bodyLarge,
-                                          ),
-                                          Text(
-                                            'Duration: ${service['duration']}',
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Text(
-                                        '\$${service['price'].toStringAsFixed(2)}',
-                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Subtotal',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '\$${_subtotal.toStringAsFixed(2)}',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Notes
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Additional Notes',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _noteController,
-                              decoration: const InputDecoration(
-                                hintText: 'Add any special requests or notes here...',
-                                border: OutlineInputBorder(),
-                              ),
-                              maxLines: 3,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
-            
-            // Bottom button
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
+            const SizedBox(width: 16),
+            // Service Description
+            Expanded(
+              child: Text(
+                _bookingInfo['description'] ?? 'No description available',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
               ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(
-                        '\$${_subtotal.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceNoteCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Service Note (optional)',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: const TextField(
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(12),
+                  hintText: 'Add any special notes for your service...',
+                  hintStyle: TextStyle(color: Colors.grey),
+                ),
+                maxLines: 3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCouponCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Coupon',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _confirmBooking,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Confirm Booking'),
+                ),
+                Text(
+                  '(optional)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                // Handle coupon selection
+                print('Add coupon tapped');
+              },
+              child: Row(
+                children: [
+                  Text(
+                    'Add Coupon',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[800],
+                      decoration: TextDecoration.underline,
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey[600],
                   ),
                 ],
               ),
@@ -351,28 +553,143 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey,
+  Widget _buildReferralCodeCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Referral Code',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  '(optional)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                _showReferralCodeBottomSheet();
+              },
+              child: Row(
+                children: [
+                  Text(
+                    'Add Code',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[800],
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium,
+      ),
+    );
+  }
+
+  Widget _buildPointsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _usePoints ? 'Using 100.00 points' : 'Using 0.00 points',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  _usePoints ? 'You will save \$10.00' : 'You will save \$0.00',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _usePoints = !_usePoints;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 50,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: _usePoints ? Colors.green : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 200),
+                  alignment: _usePoints ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
