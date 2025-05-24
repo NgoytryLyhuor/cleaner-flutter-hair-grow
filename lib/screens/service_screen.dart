@@ -145,6 +145,80 @@ class _ServiceScreenState extends State<ServiceScreen>
     return selectedServices;
   }
 
+  void _showCenteredAlert(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.access_time,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleNextButtonPressed() {
+    List<SubService> selectedServices = _getSelectedServices();
+
+    if (selectedServices.isEmpty) {
+      _showCenteredAlert('Please select at least one service to continue.');
+    } else {
+      Navigator.of(context).pushNamed('/date-time');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -162,7 +236,7 @@ class _ServiceScreenState extends State<ServiceScreen>
 
                   // Title with fade animation
                   Container(
-                    margin: const EdgeInsets.only(top: 25),
+                    margin: const EdgeInsets.only(top: 40),
                     padding: const EdgeInsets.all(20),
                     child: const Text(
                       "Mochi's Services",
@@ -214,9 +288,7 @@ class _ServiceScreenState extends State<ServiceScreen>
               color: Colors.grey[100], // Match scaffold background
               child: FooterButton(
                 staffName: 'Mochi',
-                onButtonPressed: () {
-                  // Your button press logic here
-                },
+                onButtonPressed: _handleNextButtonPressed,
                 buttonText: 'Next',
               ),
 
@@ -262,7 +334,7 @@ class _ServiceScreenState extends State<ServiceScreen>
                 trailing: AnimatedRotation(
                   turns: category.isExpanded ? 0.5 : 0,
                   duration: category.isExpanded
-                      ? const Duration(milliseconds: 300) // Smooth rotation when opening
+                      ? const Duration(milliseconds: 0) // Smooth rotation when opening
                       : const Duration(milliseconds: 0), // Immediate rotation when closing
                   child: Icon(
                     Icons.keyboard_arrow_down,
@@ -274,7 +346,7 @@ class _ServiceScreenState extends State<ServiceScreen>
           ),
           AnimatedSize(
             duration: category.isExpanded
-                ? const Duration(milliseconds: 400) // Smooth expand
+                ? const Duration(milliseconds: 0) // Smooth expand
                 : const Duration(milliseconds: 0), // Immediate collapse
             curve: Curves.easeInOut,
             child: category.isExpanded

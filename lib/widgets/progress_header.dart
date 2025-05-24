@@ -32,7 +32,7 @@ class ProgressHeader extends StatelessWidget {
               ),
             ),
             child: Container(  // Removed SafeArea
-              height: 120,  // Reduced height
+              height: 140,  // Reduced height
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
               child: Row(
                 children: [

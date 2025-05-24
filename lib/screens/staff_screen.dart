@@ -99,9 +99,75 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
     });
   }
 
+  void _showCenteredAlert(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _onNextPressed() {
     if (_selectedStaffId != null) {
       Navigator.of(context).pushNamed('/service', arguments: _selectedStaffId);
+    } else {
+      _showCenteredAlert('Please select a stylist to continue');
     }
   }
 
@@ -136,7 +202,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
                         ),
                       ),
                       child: Container(
-                        margin: const EdgeInsets.only(top: 25),
+                        margin: const EdgeInsets.only(top: 40),
                         padding: const EdgeInsets.all(20),
                         child: const Text(
                           'Choose Your Stylist',
@@ -335,8 +401,8 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
             child: Container(
               color: Colors.grey[100],
               child: NextButton(
-                onPressed: _selectedStaffId != null ? _onNextPressed : null,
-                isEnabled: _selectedStaffId != null,
+                onPressed: _onNextPressed,
+                isEnabled: true, // Always enabled now since we show alert when no selection
               ),
             ),
           ),

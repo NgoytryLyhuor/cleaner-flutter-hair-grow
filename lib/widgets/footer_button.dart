@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-class FooterButton extends StatelessWidget {
+class FooterButton extends StatefulWidget {
   final String staffName;
-  final String? serviceText; // Optional service text
+  final String? serviceText;
   final VoidCallback onButtonPressed;
   final String buttonText;
 
@@ -11,8 +11,43 @@ class FooterButton extends StatelessWidget {
     required this.staffName,
     this.serviceText,
     required this.onButtonPressed,
-    this.buttonText = 'Next', // Default button text
+    this.buttonText = 'Next',
   }) : super(key: key);
+
+  @override
+  _FooterButtonState createState() => _FooterButtonState();
+}
+
+class _FooterButtonState extends State<FooterButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleButtonPress() async {
+    await _controller.forward();
+    await _controller.reverse();
+    widget.onButtonPressed();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +59,7 @@ class FooterButton extends StatelessWidget {
           topRight: Radius.circular(10),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15.0, bottom: 35.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -35,20 +70,20 @@ class FooterButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  staffName,
+                  widget.staffName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (serviceText != null && serviceText!.isNotEmpty) ...[
+                if (widget.serviceText != null && widget.serviceText!.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    serviceText!,
+                    widget.serviceText!,
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.normal,
                     ),
                     maxLines: 2,
@@ -59,20 +94,26 @@ class FooterButton extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Right side - Button
-          ElevatedButton(
-            onPressed: onButtonPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+          // Right side - Button with scale animation
+          ScaleTransition(
+            scale: _scaleAnimation,
+            child: ElevatedButton(
+              onPressed: _handleButtonPress,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-            ),
-            child: Text(
-              buttonText,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Text(
+                widget.buttonText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
             ),
           ),
         ],
