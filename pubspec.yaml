@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  share_plus: ^7.2.2
+  url_launcher: ^6.1.14
 
   # UI Components
   cupertino_icons: ^1.0.5
@@ -38,7 +40,6 @@ dependencies:
   # Utils
   flutter_native_splash: ^2.3.1
   image_picker: ^1.0.0
-  url_launcher: ^6.1.11
   flutter_secure_storage: ^8.0.0
   country_picker: ^2.0.20
   table_calendar: ^3.0.9
@@ -59,6 +60,8 @@ flutter:
     - assets/slide4.jpg
     - assets/slide5.jpg
     - assets/splash_screen_logo.png
+    - assets/points_banner_bg.png
+    - assets/logo_long.png
     - assets/icons/
     - assets/images/
     - assets/users/
