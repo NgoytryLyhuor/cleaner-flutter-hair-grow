@@ -87,20 +87,9 @@ class _PointsScreenState extends State<PointsScreen> with TickerProviderStateMix
     },
   ];
 
-  List<Map<String, dynamic>> get _filteredHistory {
-    if (_tabController == null) return _allHistory;
-
-    switch (_tabController!.index) {
-      case 0: // History (All)
-        return _allHistory;
-      case 1: // Earned
-        return _allHistory.where((item) => item['type'] == 'earned').toList();
-      case 2: // Used
-        return _allHistory.where((item) => item['type'] == 'used').toList();
-      default:
-        return _allHistory;
-    }
-  }
+  List<Map<String, dynamic>> get _historyAll => _allHistory;
+  List<Map<String, dynamic>> get _historyEarned => _allHistory.where((item) => item['type'] == 'earned').toList();
+  List<Map<String, dynamic>> get _historyUsed => _allHistory.where((item) => item['type'] == 'used').toList();
 
   String formatPoints(int points) {
     final formatter = NumberFormat('#,##0.00');
@@ -116,7 +105,6 @@ class _PointsScreenState extends State<PointsScreen> with TickerProviderStateMix
         // Only animate when tab is actually changing, not during the animation process
         _listAnimationController?.reset();
         _listAnimationController?.forward();
-        setState(() {}); // Rebuild when tab changes
       }
     });
 
@@ -243,6 +231,17 @@ class _PointsScreenState extends State<PointsScreen> with TickerProviderStateMix
             ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildHistoryList(List<Map<String, dynamic>> history) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: history.length,
+      itemBuilder: (context, index) {
+        final item = history[index];
+        return _buildAnimatedHistoryItem(item, index);
       },
     );
   }
@@ -430,17 +429,20 @@ class _PointsScreenState extends State<PointsScreen> with TickerProviderStateMix
             ),
           ),
 
-          // History List with Animation
+          // Swipeable Content using TabBarView
           Expanded(
             child: Container(
               margin: const EdgeInsets.only(bottom: 20),
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _filteredHistory.length,
-                itemBuilder: (context, index) {
-                  final item = _filteredHistory[index];
-                  return _buildAnimatedHistoryItem(item, index);
-                },
+              child: _tabController == null ? const SizedBox.shrink() : TabBarView(
+                controller: _tabController!,
+                children: [
+                  // History Tab (All)
+                  _buildHistoryList(_historyAll),
+                  // Earned Tab
+                  _buildHistoryList(_historyEarned),
+                  // Used Tab
+                  _buildHistoryList(_historyUsed),
+                ],
               ),
             ),
           ),

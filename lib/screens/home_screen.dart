@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/bottom_navigation.dart';
+import '../widgets/inquiry_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -550,6 +551,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             break;
           case 'Coupon':
             Navigator.of(context).pushNamed('/coupon');
+            break;
+          case 'Inquiry':
+          // Show the inquiry modal instead of navigating
+            showInquiryModal(context);
             break;
           case 'Notifications':
             Navigator.of(context).pushNamed('/notifications');

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navigation.dart';
+import '../widgets/custom_header.dart';
 
 class CouponScreen extends StatefulWidget {
   const CouponScreen({Key? key}) : super(key: key);
@@ -8,285 +8,304 @@ class CouponScreen extends StatefulWidget {
   State<CouponScreen> createState() => _CouponScreenState();
 }
 
-class _CouponScreenState extends State<CouponScreen> {
-  final TextEditingController _couponController = TextEditingController();
-  bool _isApplying = false;
-  
-  // Sample coupons data
+class _CouponScreenState extends State<CouponScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  final List<AnimationController> _cardAnimationControllers = [];
+  final List<Animation<Offset>> _slideAnimations = [];
+  final List<Animation<double>> _fadeAnimations = [];
+
+  // Sample coupon data (removed all coupon codes as requested)
   final List<Map<String, dynamic>> _coupons = [
     {
       'id': '1',
-      'code': 'WELCOME25',
-      'discount': '25% OFF',
-      'description': 'Get 25% off on your first booking',
-      'expiry': 'Jun 30, 2025',
-      'isUsed': false,
+      'title': 'Coupon test by developer',
+      'validUntil': '26/05/2025',
+      'discountCode': 'JSHFHV12HD',
+      'description': 'Get special discount on your booking with this exclusive coupon.',
     },
     {
       'id': '2',
-      'code': 'HAIRCUT10',
-      'discount': '10% OFF',
-      'description': 'Get 10% off on all haircut services',
-      'expiry': 'Jul 15, 2025',
-      'isUsed': false,
-    },
-    {
-      'id': '3',
-      'code': 'SUMMER2025',
-      'discount': '15% OFF',
-      'description': 'Summer special discount on all services',
-      'expiry': 'Aug 31, 2025',
-      'isUsed': false,
-    },
-    {
-      'id': '4',
-      'code': 'FREESTYLE',
-      'discount': 'FREE',
-      'description': 'Free styling with any haircut service',
-      'expiry': 'May 25, 2025',
-      'isUsed': true,
+      'title': 'Welcome Bonus',
+      'validUntil': '30/06/2025',
+      'discountCode': 'WELCOME25',
+      'description': 'Welcome to our salon! Get exclusive discount on your first visit.',
     },
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    // Initialize individual card animations
+    _initializeCardAnimations();
+
+    // Start animations after a short delay
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startCardAnimations();
+    });
+  }
+
+  void _initializeCardAnimations() {
+    for (int i = 0; i < _coupons.length; i++) {
+      final controller = AnimationController(
+        duration: const Duration(milliseconds: 600),
+        vsync: this,
+      );
+
+      final slideAnimation = Tween<Offset>(
+        begin: const Offset(0.0, 0.5),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: controller,
+        curve: Curves.easeOutCubic,
+      ));
+
+      final fadeAnimation = Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: controller,
+        curve: Curves.easeOut,
+      ));
+
+      _cardAnimationControllers.add(controller);
+      _slideAnimations.add(slideAnimation);
+      _fadeAnimations.add(fadeAnimation);
+    }
+  }
+
+  void _startCardAnimations() async {
+    for (int i = 0; i < _cardAnimationControllers.length; i++) {
+      await Future.delayed(Duration(milliseconds: i * 100));
+      if (mounted) {
+        _cardAnimationControllers[i].forward();
+      }
+    }
+  }
+
+  @override
   void dispose() {
-    _couponController.dispose();
+    _animationController.dispose();
+    for (final controller in _cardAnimationControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  void _applyCoupon() {
-    if (_couponController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a coupon code'),
+  void _showCouponDetails(Map<String, dynamic> coupon) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildCouponDetailsModal(coupon),
+    );
+  }
+
+  Widget _buildCouponDetailsModal(Map<String, dynamic> coupon) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.4,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isApplying = true;
-    });
-
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isApplying = false;
-      });
-
-      // Check if coupon exists
-      final couponCode = _couponController.text.toUpperCase();
-      final existingCoupon = _coupons.any((coupon) => coupon['code'] == couponCode);
-
-      if (existingCoupon) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Coupon already exists in your account'),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        );
-      } else {
-        // Add new coupon
-        setState(() {
-          _coupons.insert(0, {
-            'id': DateTime.now().millisecondsSinceEpoch.toString(),
-            'code': couponCode,
-            'discount': '20% OFF',
-            'description': 'New coupon added',
-            'expiry': 'Jun 30, 2025',
-            'isUsed': false,
-          });
-        });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Coupon applied successfully'),
+          // Header with close button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  coupon['title'],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
 
-        _couponController.clear();
-      }
-    });
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Discount Code: ${coupon['discountCode']}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Valid until: ${coupon['validUntil']}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Coupon Description',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    coupon['description'],
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCouponCard(Map<String, dynamic> coupon, int index) {
+    return SlideTransition(
+      position: _slideAnimations[index],
+      child: FadeTransition(
+        opacity: _fadeAnimations[index],
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          child: Card(
+            elevation: 0.5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Row(
+                children: [
+                  // Left side - Coupon icon with light red background
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/icons/coupon_discount.png',
+                        width: 24,
+                        height: 24,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Right side - Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Main title
+                        Text(
+                          coupon['title'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Valid until date
+                        Text(
+                          'Valid until ${coupon['validUntil']}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Details with underline
+                        GestureDetector(
+                          onTap: () => _showCouponDetails(coupon),
+                          child: const Text(
+                            'Details',
+                            style: TextStyle(
+                              fontSize: 14,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('My Coupons'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Apply coupon section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Apply Coupon',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _couponController,
-                          decoration: const InputDecoration(
-                            hintText: 'Enter coupon code',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                          textCapitalization: TextCapitalization.characters,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton(
-                        onPressed: _isApplying ? null : _applyCoupon,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        ),
-                        child: _isApplying
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Apply'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+      backgroundColor: Colors.grey[100],
+      body: Column(
+        children: [
+          // Custom header with back button
+          const CustomHeader(
+            title: 'Coupon',
+          ),
+
+          // Coupons list
+          Expanded(
+            child: _coupons.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _coupons.length,
+              itemBuilder: (context, index) {
+                final coupon = _coupons[index];
+                return _buildCouponCard(coupon, index);
+              },
             ),
-            
-            // Coupons list
-            Expanded(
-              child: _coupons.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _coupons.length,
-                      itemBuilder: (context, index) {
-                        final coupon = _coupons[index];
-                        final bool isUsed = coupon['isUsed'] as bool;
-                        
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: isUsed ? Colors.grey.shade100 : Colors.white,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: isUsed ? Colors.grey : Colors.green,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Text(
-                                        coupon['discount'],
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    if (isUsed)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey,
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        child: const Text(
-                                          'USED',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  coupon['code'],
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: isUsed ? Colors.grey : null,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  coupon['description'],
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: isUsed ? Colors.grey : null,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Valid until: ${coupon['expiry']}',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: isUsed ? Colors.grey : Colors.grey.shade700,
-                                      ),
-                                    ),
-                                    if (!isUsed)
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          // Copy coupon code to clipboard
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('${coupon['code']} copied to clipboard'),
-                                            ),
-                                          );
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                          minimumSize: Size.zero,
-                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                        ),
-                                        child: const Text('Copy Code'),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -296,23 +315,35 @@ class _CouponScreenState extends State<CouponScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.local_offer_outlined,
-            size: 64,
-            color: Colors.grey,
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Center(
+              child: Image.asset(
+                'assets/icons/coupon_discount.png',
+                width: 40,
+                height: 40,
+                color: Colors.red,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             'No Coupons Available',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Apply a coupon code to get discounts',
+            'Check back later for exclusive offers',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey,
+              color: Colors.grey[500],
             ),
           ),
         ],
