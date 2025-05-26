@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirstLoadScreen extends StatefulWidget {
   const FirstLoadScreen({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ class _FirstLoadScreenState extends State<FirstLoadScreen>
 
     // Initialize animation controller
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500), // fade out over 800ms
+      duration: const Duration(milliseconds: 500), // fade out over 500ms
       vsync: this,
     );
 
@@ -31,19 +32,34 @@ class _FirstLoadScreenState extends State<FirstLoadScreen>
       curve: Curves.easeInOut,
     ));
 
-    _startFadeAndNavigate();
+    _startLoadingAndNavigate();
   }
 
-  Future<void> _startFadeAndNavigate() async {
-    // Wait for 1 second (like your React Native version)
+  Future<void> _startLoadingAndNavigate() async {
+    // Wait for loading time (like your original version)
     await Future.delayed(const Duration(seconds: 1));
 
     if (mounted) {
+      // Start fade out animation
       await _animationController.forward();
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Check if this is first time user
+        await _checkFirstLaunchAndNavigate();
       }
+    }
+  }
+
+  Future<void> _checkFirstLaunchAndNavigate() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isFirstLaunch = prefs.getBool('first_launch') ?? true;
+
+    if (isFirstLaunch) {
+      // First time user - go to welcome screen
+      Navigator.of(context).pushReplacementNamed('/welcome');
+    } else {
+      // Returning user - go directly to home
+      Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 
@@ -69,7 +85,7 @@ class _FirstLoadScreenState extends State<FirstLoadScreen>
                 height: 270,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  print('Image loading error: $error'); // Add this line
+                  print('Image loading error: $error');
                   return Container(
                     width: 270,
                     height: 270,
@@ -85,7 +101,7 @@ class _FirstLoadScreenState extends State<FirstLoadScreen>
                           size: 80,
                           color: Colors.grey.shade600,
                         ),
-                        Text('Image not found'), // Add this for visual feedback
+                        const Text('Image not found'),
                       ],
                     ),
                   );

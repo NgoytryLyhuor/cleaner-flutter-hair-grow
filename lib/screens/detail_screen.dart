@@ -393,8 +393,8 @@ class _DetailScreenState extends State<DetailScreen> {
           children: [
             // Service Image
             Container(
-              width: 80,
-              height: 80,
+              width: 45,
+              height: 45,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.grey[200],

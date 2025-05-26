@@ -48,6 +48,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.1
+  flutter_launcher_icons: "^0.13.1"
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
 
 flutter:
   uses-material-design: true
@@ -66,5 +72,11 @@ flutter:
     - assets/images/
     - assets/users/
     - assets/services/
+    - assets/walk_img_1.png
+    - assets/walk_img_2.png
+    - assets/walk_img_3.png
+    - assets/ic_km.png
+    - assets/ic_vi.png
+    - assets/ic_us.png
 
 

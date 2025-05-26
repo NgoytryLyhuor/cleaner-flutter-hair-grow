@@ -27,7 +27,7 @@ class _FooterButtonState extends State<FooterButton> with SingleTickerProviderSt
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 80),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
       CurvedAnimation(

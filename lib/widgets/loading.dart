@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class Loading extends StatelessWidget {
-  final Color? color;
   final double size;
 
   const Loading({
     Key? key,
-    this.color,
-    this.size = 40.0,
+    this.size = 100.0, // Increased default size for GIF visibility
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SpinKitFadingCircle(
-        color: color ?? Theme.of(context).primaryColor,
-        size: size,
+      child: Container(
+        width: size + 20, // Add some padding around the GIF
+        height: size + 20,
+        decoration: BoxDecoration(
+          color: Colors.black87.withOpacity(0.4), // Dark background to contrast white GIF
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Image.asset(
+            'assets/icons/frezka_loader.gif',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
     );
   }

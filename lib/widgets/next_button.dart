@@ -29,7 +29,7 @@ class _NextButtonState extends State<NextButton> with SingleTickerProviderStateM
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 80),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
       CurvedAnimation(

@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-class InquiryModal extends StatefulWidget {
-  const InquiryModal({Key? key}) : super(key: key);
+class LanguageSelectionModal extends StatefulWidget {
+  const LanguageSelectionModal({Key? key}) : super(key: key);
 
   @override
-  State<InquiryModal> createState() => _InquiryModalState();
+  State<LanguageSelectionModal> createState() => _LanguageSelectionModalState();
 }
 
-class _InquiryModalState extends State<InquiryModal>
+class _LanguageSelectionModalState extends State<LanguageSelectionModal>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
 
-  String? _selectedApp;
+  String? _selectedLanguage;
 
   @override
   void initState() {
@@ -49,9 +48,9 @@ class _InquiryModalState extends State<InquiryModal>
     super.dispose();
   }
 
-  void _selectApp(String app) {
+  void _selectLanguage(String language) {
     setState(() {
-      _selectedApp = app;
+      _selectedLanguage = language;
     });
   }
 
@@ -63,31 +62,9 @@ class _InquiryModalState extends State<InquiryModal>
   }
 
   void _handleSelect() async {
-    if (_selectedApp != null) {
-      // Handle the selected app action
-      switch (_selectedApp) {
-        case 'Telegram':
-          _launchTelegram();
-          break;
-        case 'Facebook':
-          _launchFacebook();
-          break;
-      }
-      _closeModal();
-    }
-  }
-
-  void _launchTelegram() async {
-    const telegramUrl = 'https://t.me/your_telegram_username';
-    if (await canLaunchUrl(Uri.parse(telegramUrl))) {
-      await launchUrl(Uri.parse(telegramUrl));
-    }
-  }
-
-  void _launchFacebook() async {
-    const facebookUrl = 'https://m.me/your_facebook_page';
-    if (await canLaunchUrl(Uri.parse(facebookUrl))) {
-      await launchUrl(Uri.parse(facebookUrl));
+    if (_selectedLanguage != null) {
+      // Return the selected language to the parent widget
+      Navigator.of(context).pop(_selectedLanguage);
     }
   }
 
@@ -101,19 +78,19 @@ class _InquiryModalState extends State<InquiryModal>
           return Opacity(
             opacity: _opacityAnimation.value,
             child: Container(
-              color: Colors.black.withOpacity(0.5 * _opacityAnimation.value),
+              color: Colors.black.withOpacity(0.1 * _opacityAnimation.value),
               child: Center(
                 child: Transform.scale(
                   scale: _scaleAnimation.value,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 15),
-                    padding: const EdgeInsets.all(18),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withOpacity(0.15),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -121,64 +98,41 @@ class _InquiryModalState extends State<InquiryModal>
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header with close button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Inquiry',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: _closeModal,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 24,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Description text
+                        // Header
                         const Text(
-                          'Please select the app you want to chat with us.',
+                          'App Language',
                           style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black87,
-                            height: 1.4,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
                           ),
-                          textAlign: TextAlign.center,
                         ),
 
                         const SizedBox(height: 24),
 
-                        // App selection buttons
+                        // Language selection buttons in a row
                         Row(
                           children: [
                             Expanded(
-                              child: _buildAppButton(
-                                'Telegram',
-                                'assets/icons/ic_telegram.png',
-                                const Color(0xFF0088CC),
+                              child: _buildLanguageButton(
+                                'English',
+                                'assets/ic_us.png', // US flag
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 12),
                             Expanded(
-                              child: _buildAppButton(
-                                'Facebook',
-                                'assets/icons/ic_facebook_colored.png',
-                                const Color(0xFF1877F2),
+                              child: _buildLanguageButton(
+                                'Khmer',
+                                'assets/ic_km.png', // Cambodia flag
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildLanguageButton(
+                                'Vietnamese',
+                                'assets/ic_vi.png', // Vietnam flag
                               ),
                             ),
                           ],
@@ -191,16 +145,16 @@ class _InquiryModalState extends State<InquiryModal>
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: _selectedApp != null ? _handleSelect : null,
+                            onPressed: _selectedLanguage != null ? _handleSelect : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _selectedApp != null
+                              backgroundColor: _selectedLanguage != null
                                   ? Colors.black
                                   : Colors.grey.shade300,
-                              foregroundColor: _selectedApp != null
+                              foregroundColor: _selectedLanguage != null
                                   ? Colors.white
                                   : Colors.grey.shade500,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 0,
                             ),
@@ -225,47 +179,63 @@ class _InquiryModalState extends State<InquiryModal>
     );
   }
 
-  Widget _buildAppButton(String name, String iconPath, Color backgroundColor) {
-    final bool isSelected = _selectedApp == name;
+  Widget _buildLanguageButton(String name, String flagPath) {
+    final bool isSelected = _selectedLanguage == name;
 
     return GestureDetector(
-      onTap: () => _selectApp(name),
+      onTap: () => _selectLanguage(name),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? backgroundColor.withOpacity(0.1)
+              ? Colors.blue.shade50
               : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? backgroundColor
+                ? Colors.black
                 : Colors.transparent,
             width: 2,
           ),
         ),
         child: Column(
           children: [
+            // Flag container with circular background
             Container(
-              width: 60,
+              width: 50,
               height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Center(
-                child: Image.asset(
-                  iconPath,
-                  width: 60,
-                  height: 60,
+                child: ClipOval(
+                  child: Image.asset(
+                    flagPath,
+                    width: 35,
+                    height: 35,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               name,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: isSelected ? Colors.black : Colors.black87,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -274,15 +244,24 @@ class _InquiryModalState extends State<InquiryModal>
   }
 }
 
-// Helper function to show the modal
-void showInquiryModal(BuildContext context) {
-  showGeneralDialog(
+// Helper function to show the language selection modal
+Future<String?> showLanguageSelectionModal(BuildContext context) {
+  return showGeneralDialog<String>(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     pageBuilder: (context, animation, secondaryAnimation) {
-      return const InquiryModal();
+      return const LanguageSelectionModal();
     },
     transitionDuration: const Duration(milliseconds: 300),
   );
 }
+
+// Example usage:
+// void _showLanguageModal() async {
+//   final selectedLanguage = await showLanguageSelectionModal(context);
+//   if (selectedLanguage != null) {
+//     print('Selected language: $selectedLanguage');
+//     // Handle the selected language
+//   }
+// }

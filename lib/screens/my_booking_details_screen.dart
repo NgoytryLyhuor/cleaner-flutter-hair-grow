@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/bottom_navigation.dart';
+import '../widgets/custom_header.dart';
 
 class MyBookingDetailsScreen extends StatefulWidget {
   const MyBookingDetailsScreen({Key? key}) : super(key: key);
@@ -8,413 +8,538 @@ class MyBookingDetailsScreen extends StatefulWidget {
   State<MyBookingDetailsScreen> createState() => _MyBookingDetailsScreenState();
 }
 
-class _MyBookingDetailsScreenState extends State<MyBookingDetailsScreen> {
-  bool _isLoading = false;
-  
-  // Sample booking details
-  final Map<String, dynamic> _bookingDetails = {
-    'id': '1',
-    'branch': 'Main Branch',
-    'staff': 'John Doe',
-    'services': [
-      {
-        'name': 'Men\'s Haircut',
-        'price': 25.00,
-        'duration': '30 min',
-      },
-      {
-        'name': 'Hair Treatment',
-        'price': 45.00,
-        'duration': '45 min',
-      },
-    ],
-    'date': 'May 25, 2025',
-    'time': '10:00 AM',
-    'status': 'Confirmed',
-    'note': 'Please use hypoallergenic products.',
-    'created_at': 'May 20, 2025',
+class _MyBookingDetailsScreenState extends State<MyBookingDetailsScreen>
+    with TickerProviderStateMixin {
+  bool _hasAnimated = false;
+  bool _usePoints = false;
+  final TextEditingController _referralController = TextEditingController();
+
+  // Animation controllers
+  late AnimationController _staggeredController;
+  final List<AnimationController> _sectionAnimationControllers = [];
+  final List<Animation<Offset>> _slideAnimations = [];
+  final List<Animation<double>> _fadeAnimations = [];
+
+  // Sample booking information with null safety
+  final Map<String, dynamic> _bookingInfo = {
+    'name': 'My Developer Testing',
+    'contactNumber': '123456789',
+    'dateTime': '2025-05-28 at 10:30',
+    'branchName': 'grow Tokyo BKK',
+    'stylist': 'Mochi',
+    'description': 'Cut (For Men)',
+    'image': 'assets/services/cut-man.jpg',
   };
 
-  void _cancelBooking() {
-    // Show confirmation dialog
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text('Are you sure you want to cancel this booking?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _performCancellation();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
-      ),
+  // Section titles for animation
+  final List<String> _sections = [
+    'Your Information',
+    'Time Slot',
+    'Location Information',
+    'Stylist',
+    'Services',
+    'Services Note (optional)',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    print('MyBookingDetailsScreen: initState called');
+
+    // Controller for staggered animations
+    _staggeredController = AnimationController(
+      duration: Duration(milliseconds: 200 + (_sections.length * 100)),
+      vsync: this,
     );
-  }
 
-  void _performCancellation() {
-    setState(() {
-      _isLoading = true;
-    });
+    // Initialize individual section animations
+    _initializeSectionAnimations();
 
-    // Simulate API call
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        
-        // Show success message and navigate back
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking cancelled successfully'),
-          ),
-        );
-        
-        Navigator.of(context).pop();
+    // Start the staggered animation after a short delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && !_hasAnimated) {
+        _hasAnimated = true;
+        _startSectionAnimations();
       }
     });
   }
 
-  double get _subtotal {
-    double total = 0;
-    for (var service in _bookingDetails['services']) {
-      total += service['price'];
+  void _initializeSectionAnimations() {
+    for (int i = 0; i < _sections.length; i++) {
+      final controller = AnimationController(
+        duration: const Duration(milliseconds: 400),
+        vsync: this,
+      );
+
+      final slideAnimation = Tween<Offset>(
+        begin: const Offset(0.0, 0.3),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: controller,
+        curve: Curves.easeOutCubic,
+      ));
+
+      final fadeAnimation = Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: controller,
+        curve: Curves.easeOut,
+      ));
+
+      _sectionAnimationControllers.add(controller);
+      _slideAnimations.add(slideAnimation);
+      _fadeAnimations.add(fadeAnimation);
     }
-    return total;
+  }
+
+  void _startSectionAnimations() async {
+    for (int i = 0; i < _sectionAnimationControllers.length; i++) {
+      await Future.delayed(Duration(milliseconds: i * 80));
+      if (mounted) {
+        _sectionAnimationControllers[i].forward();
+      }
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Booking Details'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pop(),
+  void dispose() {
+    _referralController.dispose();
+    _staggeredController.dispose();
+    for (final controller in _sectionAnimationControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+
+
+  void _confirmBooking() {
+    // Simulate API call - you can add loading state here if needed
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        // Navigate to success screen or show success dialog
+        _showSuccessDialog();
+      }
+    });
+  }
+
+  void _showReferralCodeBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.4,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Status
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(_bookingDetails['status']).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(_bookingDetails['status']),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _getStatusIcon(_bookingDetails['status']),
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _bookingDetails['status'],
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _getStatusColor(_bookingDetails['status']),
-                                ),
-                              ),
-                              Text(
-                                'Booking ID: ${_bookingDetails['id']}',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                        ],
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with close button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Add Referral Code',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.grey,
+                        size: 24,
                       ),
                     ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Branch and staff info
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Appointment Info',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _buildInfoRow(
-                              icon: Icons.store_outlined,
-                              label: 'Branch',
-                              value: _bookingDetails['branch'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.person_outline,
-                              label: 'Staff',
-                              value: _bookingDetails['staff'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.calendar_today_outlined,
-                              label: 'Date',
-                              value: _bookingDetails['date'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.access_time,
-                              label: 'Time',
-                              value: _bookingDetails['time'],
-                            ),
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              icon: Icons.event_note_outlined,
-                              label: 'Created',
-                              value: _bookingDetails['created_at'],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Services
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Services',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _bookingDetails['services'].length,
-                              itemBuilder: (context, index) {
-                                final service = _bookingDetails['services'][index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            service['name'],
-                                            style: Theme.of(context).textTheme.bodyLarge,
-                                          ),
-                                          Text(
-                                            'Duration: ${service['duration']}',
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Text(
-                                        '\$${service['price'].toStringAsFixed(2)}',
-                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Total',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '\$${_subtotal.toStringAsFixed(2)}',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Notes
-                    if (_bookingDetails['note'] != null && _bookingDetails['note'].isNotEmpty)
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Notes',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _bookingDetails['note'],
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-            
-            // Bottom button
-            if (_bookingDetails['status'] == 'Confirmed' || _bookingDetails['status'] == 'Pending')
+              const SizedBox(height: 24),
+
+              // Input field
               Container(
-                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _cancelBooking,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                child: TextField(
+                  controller: _referralController,
+                  decoration: const InputDecoration(
+                    hintText: 'Referral Code',
+                    hintStyle: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Cancel Booking'),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                   ),
                 ),
               ),
+
+              const Spacer(),
+
+              // Apply button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Handle apply referral code
+                    Navigator.pop(context);
+                    // You can add your referral code logic here
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Apply',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Booking Successful!',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your appointment has been booked successfully.',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text('Done'),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey,
-          ),
+  Widget _buildAnimatedSection(int index, String title, Widget content) {
+    if (index >= _slideAnimations.length) return Container();
+
+    return SlideTransition(
+      position: _slideAnimations[index],
+      child: FadeTransition(
+        opacity: _fadeAnimations[index],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle(title),
+            const SizedBox(height: 8),
+            content,
+            const SizedBox(height: 14),
+          ],
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Confirmed':
-        return Colors.green;
-      case 'Pending':
-        return Colors.orange;
-      case 'Completed':
-        return Colors.blue;
-      case 'Cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+  @override
+  Widget build(BuildContext context) {
+    print('MyBookingDetailsScreen: build called');
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: Column(
+        children: [
+          // Custom Header
+          const CustomHeader(
+            title: '#3455',
+          ),
+
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Your Information Section
+                  _buildAnimatedSection(
+                    0,
+                    'Your Information',
+                    _buildInfoCard([
+                      _buildInfoRow('Name', _bookingInfo['name'] ?? 'N/A'),
+                      _buildInfoRow('Contact Number', _bookingInfo['contactNumber'] ?? 'N/A'),
+                    ]),
+                  ),
+
+                  // Time Slot Section
+                  _buildAnimatedSection(
+                    1,
+                    'Time Slot',
+                    _buildInfoCard([
+                      _buildInfoRow('Date & Time', _bookingInfo['dateTime'] ?? 'N/A'),
+                    ]),
+                  ),
+
+                  // Location Information Section
+                  _buildAnimatedSection(
+                    2,
+                    'Location Information',
+                    _buildInfoCard([
+                      _buildInfoRow('Branch Name', _bookingInfo['branchName'] ?? 'N/A')
+                    ]),
+                  ),
+
+                  // Stylist Section
+                  _buildAnimatedSection(
+                    3,
+                    'Stylist',
+                    _buildInfoCard([
+                      _buildInfoRow('Stylist', _bookingInfo['stylist'] ?? 'N/A'),
+                    ]),
+                  ),
+
+                  // Services Section
+                  _buildAnimatedSection(
+                    4,
+                    'Services',
+                    _buildServiceWithImageCard(),
+                  ),
+
+                  // Services Note Section
+                  _buildAnimatedSection(
+                    5,
+                    'Services Note (optional)',
+                    _buildServiceNoteCard(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'Confirmed':
-        return Icons.check_circle;
-      case 'Pending':
-        return Icons.hourglass_empty;
-      case 'Completed':
-        return Icons.done_all;
-      case 'Cancelled':
-        return Icons.cancel;
-      default:
-        return Icons.info;
-    }
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black54,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Column(
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceWithImageCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Service Image
+            Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[200],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  _bookingInfo['image'] ?? 'assets/services/cut-man.jpg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.content_cut,
+                        color: Colors.grey,
+                        size: 30,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Service Description
+            Expanded(
+              child: Text(
+                _bookingInfo['description'] ?? 'No description available',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceNoteCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              child: Text(
+                'hello kon papa',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

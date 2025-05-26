@@ -10,12 +10,16 @@ class CouponScreen extends StatefulWidget {
 
 class _CouponScreenState extends State<CouponScreen>
     with TickerProviderStateMixin {
+  bool _isLoading = true;
+  bool _hasAnimated = false;
   late AnimationController _animationController;
+  late AnimationController _shimmerController;
+  late AnimationController _staggeredController;
   final List<AnimationController> _cardAnimationControllers = [];
   final List<Animation<Offset>> _slideAnimations = [];
   final List<Animation<double>> _fadeAnimations = [];
 
-  // Sample coupon data (removed all coupon codes as requested)
+  // Sample coupon data
   final List<Map<String, dynamic>> _coupons = [
     {
       'id': '1',
@@ -36,24 +40,53 @@ class _CouponScreenState extends State<CouponScreen>
   @override
   void initState() {
     super.initState();
+    print('CouponScreen: initState called, _isLoading = $_isLoading');
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    )..repeat();
+
+    // Controller for staggered animations
+    _staggeredController = AnimationController(
+      duration: Duration(milliseconds: 200 + (_coupons.length * 100)),
       vsync: this,
     );
 
     // Initialize individual card animations
     _initializeCardAnimations();
 
-    // Start animations after a short delay
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startCardAnimations();
+    // Simulate loading data
+    Future.delayed(const Duration(milliseconds: 500), () {
+      print('CouponScreen: Loading timer completed');
+      if (mounted) {
+        print('CouponScreen: Widget is mounted, setting _isLoading to false');
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Start the staggered animation after a short delay
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted && !_hasAnimated) {
+            _hasAnimated = true;
+            _startCardAnimations();
+          }
+        });
+      } else {
+        print('CouponScreen: Widget is not mounted');
+      }
     });
   }
 
   void _initializeCardAnimations() {
     for (int i = 0; i < _coupons.length; i++) {
       final controller = AnimationController(
-        duration: const Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 300),
         vsync: this,
       );
 
@@ -91,10 +124,92 @@ class _CouponScreenState extends State<CouponScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _shimmerController.dispose();
+    _staggeredController.dispose();
     for (final controller in _cardAnimationControllers) {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return _buildSkeletonCard();
+      },
+    );
+  }
+
+  Widget _buildSkeletonCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Card(
+        elevation: 0.5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            children: [
+              // Left side - Coupon icon skeleton (50x50 to match actual icon container)
+              _buildShimmerBox(width: 50, height: 50, borderRadius: 8),
+              const SizedBox(width: 16),
+
+              // Right side - Content skeleton
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title skeleton
+                    _buildShimmerBox(width: double.infinity, height: 16),
+                    const SizedBox(height: 4),
+
+                    // Valid until skeleton
+                    _buildShimmerBox(width: 120, height: 12),
+                    const SizedBox(height: 4),
+
+                    // Details skeleton
+                    _buildShimmerBox(width: 60, height: 14),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerBox({
+    required double width,
+    required double height,
+    double borderRadius = 4,
+  }) {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        return Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            gradient: LinearGradient(
+              colors: [
+                Colors.grey[300]!,
+                Colors.grey[100]!,
+                Colors.grey[300]!,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+              begin: Alignment(-1.0 + _shimmerController.value * 2, 0.0),
+              end: Alignment(1.0 + _shimmerController.value * 2, 0.0),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showCouponDetails(Map<String, dynamic> coupon) {
@@ -224,6 +339,13 @@ class _CouponScreenState extends State<CouponScreen>
                         width: 24,
                         height: 24,
                         color: Colors.red,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.local_offer,
+                            color: Colors.red,
+                            size: 24,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -283,6 +405,8 @@ class _CouponScreenState extends State<CouponScreen>
 
   @override
   Widget build(BuildContext context) {
+    print('CouponScreen: build called, _isLoading = $_isLoading');
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Column(
@@ -294,7 +418,9 @@ class _CouponScreenState extends State<CouponScreen>
 
           // Coupons list
           Expanded(
-            child: _coupons.isEmpty
+            child: _isLoading
+                ? _buildSkeletonList()
+                : _coupons.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -328,6 +454,13 @@ class _CouponScreenState extends State<CouponScreen>
                 width: 40,
                 height: 40,
                 color: Colors.red,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.local_offer_outlined,
+                    color: Colors.red,
+                    size: 40,
+                  );
+                },
               ),
             ),
           ),

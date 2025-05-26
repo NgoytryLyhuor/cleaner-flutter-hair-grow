@@ -29,6 +29,8 @@ import 'screens/about_app_screen.dart';
 import 'screens/social_media_screen.dart';
 import 'screens/country_screen.dart';
 import 'screens/edit_profile_screen.dart';
+import 'widgets/country_selection_modal.dart';
+import 'widgets/language_selection_modal.dart';
 
 void main() {
   runApp(
@@ -51,7 +53,7 @@ class MyApp extends StatelessWidget {
       title: 'growTokyo',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      // initialRoute: '/first-load',
+      // Always start with first-load for the flow you described
       initialRoute: '/first-load',
       onGenerateRoute: (settings) {
         // Get the route name
@@ -117,7 +119,7 @@ class MyApp extends StatelessWidget {
           case '/notifications':
             page = const NotificationsScreen();
             break;
-          case '/settings':
+          case '/setting':
             page = const SettingScreen();
             break;
           case '/about-app':
@@ -131,6 +133,12 @@ class MyApp extends StatelessWidget {
             break;
           case '/edit-profile':
             page = const EditProfileScreen();
+            break;
+          case '/country-selection-modal':
+            page = const CountrySelectionModal();
+            break;
+          case '/language-selection-modal':
+            page = const LanguageSelectionModal();
             break;
           default:
             page = const FirstLoadScreen();
@@ -147,10 +155,9 @@ class MyApp extends StatelessWidget {
               child: child,
             );
           },
-          transitionDuration: const Duration(milliseconds: 1), // Fast fade
+          transitionDuration: const Duration(milliseconds: 300), // Adjust as needed
         );
       },
-      // Routes property removed as we're using onGenerateRoute
     );
   }
 }
