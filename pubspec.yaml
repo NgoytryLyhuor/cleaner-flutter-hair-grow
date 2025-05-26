@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   share_plus: ^7.2.2
   url_launcher: ^6.1.14
+  lottie: ^2.6.0
 
   # UI Components
   cupertino_icons: ^1.0.5

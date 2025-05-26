@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/progress_header.dart';
 import '../widgets/next_button.dart';
+import '../services/api_service.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({Key? key}) : super(key: key);
@@ -11,48 +12,15 @@ class StaffScreen extends StatefulWidget {
 
 class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin {
   String? _selectedStaffId;
+  String? _branchId;
   late AnimationController _animationController;
   late AnimationController _staggeredAnimationController;
+  late AnimationController _shimmerController;
   late Animation<double> _scaleAnimation;
-
-  // Sample staff data with descriptions instead of services
-  final List<Map<String, dynamic>> _staffList = [
-    {
-      'id': '1',
-      'name': 'Chandeth',
-      'title': 'Cambodian Hairstylist',
-      'description': 'Ladys Cut \$18 • Mens Cut \$15 • Kids Cut \$11',
-      'image': 'assets/users/chandeth.jpg',
-    },
-    {
-      'id': '2',
-      'name': 'Mochi',
-      'title': 'Cambodian Hairstylist',
-      'description': 'Lady\'s Cut \$18 • Men\'s Cut \$15 • Kids Cut \$11',
-      'image': 'assets/users/mochi.jpg',
-    },
-    {
-      'id': '3',
-      'name': 'Takuma',
-      'title': 'Japanese Hairstylist',
-      'description': 'Men\'s Hair Cut \$35 • Lady\'s Hair Cut \$40 • Kids Cut \$25',
-      'image': 'assets/users/takuma.jpg',
-    },
-    {
-      'id': '4',
-      'name': 'Chiva',
-      'title': 'Top stylist Price',
-      'description': 'Lady\'s Cut \$21 • Men\'s Cut \$18 • Kids Cut \$14',
-      'image': 'assets/users/chiva.jpg',
-    },
-    {
-      'id': '5',
-      'name': 'Hana',
-      'title': 'Senior Stylist',
-      'description': 'Lady\'s Cut \$22 • Men\'s Cut \$17 • Kids Cut \$13',
-      'image': 'assets/users/hana.jpg',
-    },
-  ];
+  late Future<List<Map<String, dynamic>>> _staffFuture;
+  List<Map<String, dynamic>> _staffList = [];
+  bool _hasAnimated = false;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -77,14 +45,36 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
       duration: const Duration(milliseconds: 800),
     );
 
-    // Start the staggered animation when the screen loads
-    _staggeredAnimationController.forward();
+    // Initialize shimmer controller for skeleton loading
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Get branch_id from navigation arguments
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is String) {
+      _branchId = args;
+      _loadStaff();
+    }
+  }
+
+  void _loadStaff() {
+    if (_branchId != null) {
+      _staffFuture = _apiService.getStaffList(_branchId!);
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _staggeredAnimationController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
@@ -96,6 +86,30 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
     // Trigger selection animation
     _animationController.forward().then((_) {
       _animationController.reverse();
+    });
+  }
+
+  void _onDataLoaded(List<Map<String, dynamic>> staffList) {
+    setState(() {
+      _staffList = staffList;
+    });
+
+    // Start animation after data is loaded
+    if (!_hasAnimated) {
+      _hasAnimated = true;
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _staggeredAnimationController.forward();
+        }
+      });
+    }
+  }
+
+  void _onRetry() {
+    setState(() {
+      _staggeredAnimationController.reset();
+      _hasAnimated = false;
+      _loadStaff();
     });
   }
 
@@ -171,13 +185,243 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
     }
   }
 
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: 5, // Show 5 skeleton items
+      itemBuilder: (context, index) {
+        return _buildSkeletonItem();
+      },
+    );
+  }
+
+  Widget _buildSkeletonItem() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Profile image skeleton
+          _buildShimmerBox(width: 70, height: 70, borderRadius: 35),
+          const SizedBox(width: 16),
+          // Text content skeleton
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildShimmerBox(width: 120, height: 16, borderRadius: 4),
+                const SizedBox(height: 8),
+                _buildShimmerBox(width: 200, height: 12, borderRadius: 4),
+              ],
+            ),
+          ),
+          // Radio button skeleton
+          _buildShimmerBox(width: 20, height: 20, borderRadius: 10),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerBox({
+    required double width,
+    required double height,
+    double borderRadius = 4,
+  }) {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        return Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            gradient: LinearGradient(
+              colors: [
+                Colors.grey[300]!,
+                Colors.grey[100]!,
+                Colors.grey[300]!,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+              begin: Alignment(-1.0 + _shimmerController.value * 2, 0.0),
+              end: Alignment(1.0 + _shimmerController.value * 2, 0.0),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStaffList(List<Map<String, dynamic>> staffList) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: staffList.length,
+      itemBuilder: (context, index) {
+        final staff = staffList[index];
+        final bool isSelected = staff['id'] == _selectedStaffId;
+
+        // Calculate staggered animation interval for each item
+        final double itemStartTime = (0.2 + index * 0.1).clamp(0.0, 1.0);
+        final double itemEndTime = (itemStartTime + 0.4).clamp(0.0, 1.0);
+
+        // Create curved animations for fade and slide
+        final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _staggeredAnimationController,
+            curve: Interval(itemStartTime, itemEndTime, curve: Curves.easeOut),
+          ),
+        );
+        final slideAnimation = Tween<Offset>(begin: const Offset(0.0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _staggeredAnimationController,
+            curve: Interval(itemStartTime, itemEndTime, curve: Curves.easeOut),
+          ),
+        );
+
+        return FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: AnimatedBuilder(
+              animation: _scaleAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: isSelected ? _scaleAnimation.value : 1.0,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: GestureDetector(
+                      onTap: () => _selectStaff(staff['id']),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // Staff Image
+                            Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(35),
+                                color: Colors.grey[300],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(35),
+                                child: staff['image'].isNotEmpty
+                                    ? Image.network(
+                                  staff['image'],
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: Colors.grey,
+                                        size: 30,
+                                      ),
+                                    );
+                                  },
+                                )
+                                    : const Icon(
+                                  Icons.person,
+                                  color: Colors.grey,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            // Staff Details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Name
+                                  Text(
+                                    staff['name'],
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  // Description
+                                  Text(
+                                    staff['description'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Radio Button
+                            Radio<String>(
+                              value: staff['id'],
+                              groupValue: _selectedStaffId,
+                              onChanged: (String? value) {
+                                if (value != null) {
+                                  _selectStaff(value);
+                                }
+                              },
+                              activeColor: Colors.black,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Stack(
         children: [
-          // Scrollable Content Area (now full screen)
+          // Scrollable Content Area
           Positioned.fill(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -186,191 +430,77 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
                   // Top padding to account for header height
                   const SizedBox(height: 140),
 
-                  // Subtitle with fade animation
-                  FadeTransition(
-                    opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                      CurvedAnimation(
-                        parent: _staggeredAnimationController,
-                        curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
-                      ),
-                    ),
-                    child: SlideTransition(
-                      position: Tween<Offset>(begin: const Offset(0.0, 0.3), end: Offset.zero).animate(
-                        CurvedAnimation(
-                          parent: _staggeredAnimationController,
-                          curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
-                        ),
-                      ),
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 40),
-                        padding: const EdgeInsets.all(20),
-                        child: const Text(
-                          'Choose Your Stylist',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black87,
-                          ),
-                        ),
+                  // Subtitle
+                  Container(
+                    margin: const EdgeInsets.only(top: 40),
+                    padding: const EdgeInsets.all(20),
+                    child: const Text(
+                      'Choose Your Stylist',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
 
-                  // Staff List with staggered animation
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: _staffList.length,
-                    itemBuilder: (context, index) {
-                      final staff = _staffList[index];
-                      final bool isSelected = staff['id'] == _selectedStaffId;
-
-                      // Calculate staggered animation interval for each item
-                      final double itemStartTime = (0.2 + index * 0.1).clamp(0.0, 1.0);
-                      final double itemEndTime = (itemStartTime + 0.4).clamp(0.0, 1.0);
-
-                      // Create curved animations for fade and slide
-                      final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-                        CurvedAnimation(
-                          parent: _staggeredAnimationController,
-                          curve: Interval(itemStartTime, itemEndTime, curve: Curves.easeOut),
-                        ),
-                      );
-                      final slideAnimation = Tween<Offset>(begin: const Offset(0.0, 0.5), end: Offset.zero).animate(
-                        CurvedAnimation(
-                          parent: _staggeredAnimationController,
-                          curve: Interval(itemStartTime, itemEndTime, curve: Curves.easeOut),
-                        ),
-                      );
-
-                      return FadeTransition(
-                        opacity: fadeAnimation,
-                        child: SlideTransition(
-                          position: slideAnimation,
-                          child: AnimatedBuilder(
-                            animation: _scaleAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: isSelected ? _scaleAnimation.value : 1.0,
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  child: GestureDetector(
-                                    onTap: () => _selectStaff(staff['id']),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 150),
-                                      curve: Curves.easeInOut,
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.05),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                            spreadRadius: 0,
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          // Staff Image
-                                          Container(
-                                            width: 70,
-                                            height: 70,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(100),
-                                              image: DecorationImage(
-                                                image: AssetImage(staff['image']),
-                                                fit: BoxFit.cover,
-                                                onError: (exception, stackTrace) {
-                                                  // Handle image loading error
-                                                },
-                                              ),
-                                            ),
-                                            child: staff['image'].isEmpty
-                                                ? Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[300],
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: const Icon(
-                                                Icons.person,
-                                                color: Colors.grey,
-                                                size: 30,
-                                              ),
-                                            )
-                                                : null,
-                                          ),
-
-                                          const SizedBox(width: 16),
-
-                                          // Staff Details
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // Name
-                                                Text(
-                                                  staff['name'],
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.black87,
-                                                  ),
-                                                ),
-
-                                                const SizedBox(height: 4),
-
-                                                // Title
-                                                Text(
-                                                  staff['title'],
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                ),
-
-                                                const SizedBox(height: 8),
-
-                                                // Description
-                                                Text(
-                                                  staff['description'],
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-
-                                          // Radio Button
-                                          Radio<String>(
-                                            value: staff['id'],
-                                            groupValue: _selectedStaffId,
-                                            onChanged: (String? value) {
-                                              if (value != null) {
-                                                _selectStaff(value);
-                                              }
-                                            },
-                                            activeColor: Colors.black,
-                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                            visualDensity: VisualDensity.compact,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                  // Staff List with API data
+                  if (_branchId != null)
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _staffFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _buildSkeletonList();
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
+                                const SizedBox(height: 16),
+                                Text('Error loading staff', style: TextStyle(color: Colors.grey[600])),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _onRetry,
+                                  child: const Text('Retry'),
                                 ),
-                              );
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                              ],
+                            ),
+                          );
+                        } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                          // Update local state when data is loaded
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (_staffList.isEmpty || _staffList != snapshot.data!) {
+                              _onDataLoaded(snapshot.data!);
+                            }
+                          });
+
+                          return _buildStaffList(snapshot.data!);
+                        } else {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.people_outline, size: 48, color: Colors.grey[600]),
+                                const SizedBox(height: 16),
+                                Text('No staff available', style: TextStyle(color: Colors.grey[600])),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    )
+                  else
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
+                          const SizedBox(height: 16),
+                          Text('Branch not selected', style: TextStyle(color: Colors.grey[600])),
+                        ],
+                      ),
+                    ),
 
                   // Bottom padding for scroll area
                   const SizedBox(height: 100),
@@ -379,7 +509,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
             ),
           ),
 
-          // Progress Header (now overlays the content with transparent background)
+          // Progress Header
           Positioned(
             top: 0,
             left: 0,
@@ -393,7 +523,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
             ),
           ),
 
-          // Next Button (positioned at bottom)
+          // Next Button
           Positioned(
             bottom: 0,
             left: 0,
@@ -402,7 +532,7 @@ class _StaffScreenState extends State<StaffScreen> with TickerProviderStateMixin
               color: Colors.grey[100],
               child: NextButton(
                 onPressed: _onNextPressed,
-                isEnabled: true, // Always enabled now since we show alert when no selection
+                isEnabled: true,
               ),
             ),
           ),
